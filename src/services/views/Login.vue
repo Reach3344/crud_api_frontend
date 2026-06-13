@@ -1,27 +1,30 @@
 <template>
-  <div class="row justify-content-center">
+  <div class="row justify-content-center mt-5">
     <div class="col-md-6">
       <div class="card shadow-sm">
         <div class="card-body p-4">
           <h2 class="mb-3">Login</h2>
-          <p class="text-muted">Sign in to manage students.</p>
 
           <form @submit.prevent="handleLogin">
+            <!-- Email -->
             <div class="mb-3">
-              <label class="form-label">Email</label>
+              <label>Email</label>
               <input v-model="form.email" type="email" class="form-control" required />
             </div>
 
+            <!-- Password -->
             <div class="mb-3">
-              <label class="form-label">Password</label>
+              <label>Password</label>
               <input v-model="form.password" type="password" class="form-control" required />
             </div>
 
-            <button class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn btn-primary w-100">
+              Login
+            </button>
           </form>
 
-          <p class="mt-3 mb-0 text-center">
-            Don’t have an account?
+          <p class="mt-3 text-center">
+            Don't have account?
             <router-link to="/register">Register</router-link>
           </p>
         </div>
@@ -45,11 +48,17 @@ const form = reactive({
 const handleLogin = async () => {
   try {
     const response = await api.post("/login", form);
+
+    // save token
     localStorage.setItem("token", response.data.token || "");
+
     alert("Login successful");
-    router.push("/");
+
+    // ✅ GO TO STUDENT LIST PAGE
+    router.push("/students");
+
   } catch (error) {
-    console.error(error);
+    console.log(error);
     alert(error?.response?.data?.message || "Login failed");
   }
 };

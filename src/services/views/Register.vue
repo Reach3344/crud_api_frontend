@@ -7,19 +7,33 @@
           <p class="text-muted">Create a new account.</p>
 
           <form @submit.prevent="handleRegister">
+            <!-- Name -->
             <div class="mb-3">
               <label class="form-label">Name</label>
               <input v-model="form.name" type="text" class="form-control" required />
             </div>
 
+            <!-- Email -->
             <div class="mb-3">
               <label class="form-label">Email</label>
               <input v-model="form.email" type="email" class="form-control" required />
             </div>
 
+            <!-- Password -->
             <div class="mb-3">
               <label class="form-label">Password</label>
               <input v-model="form.password" type="password" class="form-control" required />
+            </div>
+
+            <!-- Confirm Password (IMPORTANT) -->
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input
+                v-model="form.password_confirmation"
+                type="password"
+                class="form-control"
+                required
+              />
             </div>
 
             <button class="btn btn-success w-100">Register</button>
@@ -46,12 +60,16 @@ const form = reactive({
   name: "",
   email: "",
   password: "",
+  password_confirmation: "", // ✅ ADD THIS
 });
 
 const handleRegister = async () => {
   try {
     await api.post("/register", form);
+
     alert("Registration successful");
+
+    // redirect to login page
     router.push("/login");
   } catch (error) {
     console.error(error);
