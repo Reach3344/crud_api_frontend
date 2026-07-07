@@ -64,13 +64,22 @@ const form = reactive({
 });
 
 const handleRegister = async () => {
+  // Client-side validation: check passwords match
+  if (form.password !== form.password_confirmation) {
+    alert("Passwords do not match");
+    return;
+  }
+
   try {
-    await api.post("/register", form);
+    const response = await api.post("/register", form);
 
-    alert("Registration successful");
+    // Save token from registration response so user is auto-logged in
+    localStorage.setItem("token", response.data.token || "");
 
-    // redirect to login page
-    router.push("/login");
+    alert("Registration successful!");
+
+    // Redirect straight to students list (no need to login again)
+    router.push("/students");
   } catch (error) {
     console.error(error);
     alert(error?.response?.data?.message || "Registration failed");

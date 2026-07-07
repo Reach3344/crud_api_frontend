@@ -36,6 +36,26 @@
           />
         </div>
 
+        <div class="mb-3">
+          <label>Gender</label>
+          <select class="form-control" v-model="student.gender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label>Address</label>
+          <textarea
+            class="form-control"
+            v-model="student.address"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+
         <button class="btn btn-primary">Save</button>
       </form>
     </div>
@@ -53,15 +73,18 @@ const student = reactive({
   name: "",
   email: "",
   phone: "",
+  gender: "",
+  address: "",
 });
 
 const saveStudent = async () => {
   try {
     await api.post("/students", student);
     alert("Student created successfully!");
-    router.push("/");
+    router.push("/students");
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    alert(error?.response?.data?.message || "Failed to create student");
   }
 };
 </script>

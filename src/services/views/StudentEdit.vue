@@ -33,6 +33,25 @@
           />
         </div>
 
+        <div class="mb-3">
+          <label>Gender</label>
+          <select class="form-control" v-model="student.gender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label>Address</label>
+          <textarea
+            class="form-control"
+            v-model="student.address"
+            rows="3"
+          ></textarea>
+        </div>
+
         <button class="btn btn-primary">Update</button>
       </form>
     </div>
@@ -51,17 +70,29 @@ const student = reactive({
   name: "",
   email: "",
   phone: "",
+  gender: "",
+  address: "",
 });
 
 const loadStudent = async () => {
-  const response = await api.get(`/students/${route.params.id}`);
-  Object.assign(student, response.data);
+  try {
+    const response = await api.get(`/students/${route.params.id}`);
+    Object.assign(student, response.data);
+  } catch (error) {
+    console.error(error);
+    alert(error?.response?.data?.message || "Failed to load student");
+  }
 };
 
 const updateStudent = async () => {
-  await api.put(`/students/${route.params.id}`, student);
-  alert("Student updated successfully!");
-  router.push("/");
+  try {
+    await api.put(`/students/${route.params.id}`, student);
+    alert("Student updated successfully!");
+    router.push("/students");
+  } catch (error) {
+    console.error(error);
+    alert(error?.response?.data?.message || "Failed to update student");
+  }
 };
 
 onMounted(() => {

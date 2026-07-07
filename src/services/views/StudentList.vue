@@ -2,11 +2,11 @@
   <div>
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2>Category List</h2>
+      <h2>Student List</h2>
 
       <div>
         <router-link to="/create" class="btn btn-primary btn-sm me-2">
-          + Add Category
+          + Add Student
         </router-link>
 
         <!-- LOGOUT -->
@@ -22,22 +22,28 @@
         <tr>
           <th>ID</th>
           <th>Name</th>
-          <th>Description</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Gender</th>
+          <th>Address</th>
           <th width="220">Action</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr v-for="item in categories" :key="item.id">
+        <tr v-for="item in students" :key="item.id">
           <td>{{ item.id }}</td>
           <td>{{ item.name }}</td>
-          <td>{{ item.dec }}</td>
+          <td>{{ item.email }}</td>
+          <td>{{ item.phone }}</td>
+          <td>{{ item.gender }}</td>
+          <td>{{ item.address }}</td>
 
           <td>
             <!-- VIEW -->
             <button
               class="btn btn-info btn-sm me-1"
-              @click="viewCategory(item)"
+              @click="viewStudent(item)"
             >
               View
             </button>
@@ -53,7 +59,7 @@
             <!-- DELETE -->
             <button
               class="btn btn-danger btn-sm"
-              @click="deleteCategory(item.id)"
+              @click="deleteStudent(item.id)"
             >
               Delete
             </button>
@@ -63,18 +69,41 @@
     </table>
 
     <!-- EMPTY -->
-    <div v-if="categories.length === 0" class="alert alert-info">
-      No categories found.
+    <div v-if="students.length === 0" class="alert alert-info">
+      No students found.
     </div>
 
     <!-- VIEW MODAL -->
-    <div v-if="selected" class="modal-overlay">
+    <div v-if="selected" class="modal-overlay" @click.self="selected = null">
       <div class="modal-box">
-        <h4>Category Detail</h4>
+        <h4>Student Detail</h4>
 
-        <p><b>ID:</b> {{ selected.id }}</p>
-        <p><b>Name:</b> {{ selected.name }}</p>
-        <p><b>Description:</b> {{ selected.dec }}</p>
+        <div class="modal-body">
+          <div class="detail-row">
+            <span class="label">ID:</span>
+            <span class="value">{{ selected.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ selected.name }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ selected.email }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Phone:</span>
+            <span class="value">{{ selected.phone }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Gender:</span>
+            <span class="value">{{ selected.gender }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Address:</span>
+            <span class="value">{{ selected.address }}</span>
+          </div>
+        </div>
 
         <button class="btn btn-secondary btn-sm" @click="selected = null">
           Close
@@ -89,34 +118,33 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "../../services/api";
 
-// router
 const router = useRouter();
 
 // data
-const categories = ref([]);
+const students = ref([]);
 const selected = ref(null);
 
 // LOAD DATA FROM BACKEND
-const loadCategories = async () => {
+const loadStudents = async () => {
   try {
-    const res = await api.get("/categories");
-    categories.value = res.data;
+    const res = await api.get("/students");
+    students.value = res.data.data || res.data;
   } catch (err) {
     console.log(err);
   }
 };
 
 // VIEW
-const viewCategory = (item) => {
+const viewStudent = (item) => {
   selected.value = item;
 };
 
 // DELETE
-const deleteCategory = async (id) => {
-  if (confirm("Are you sure you want to delete this category?")) {
+const deleteStudent = async (id) => {
+  if (confirm("Are you sure you want to delete this student?")) {
     try {
-      await api.delete(`/categories/${id}`);
-      loadCategories();
+      await api.delete(`/students/${id}`);
+      loadStudents();
     } catch (err) {
       console.log(err);
     }
@@ -133,7 +161,7 @@ const logout = () => {
 
 // INIT
 onMounted(() => {
-  loadCategories();
+  loadStudents();
 });
 </script>
 
