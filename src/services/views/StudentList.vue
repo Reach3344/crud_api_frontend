@@ -1,83 +1,76 @@
 <template>
-  <div>
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2>Student List</h2>
-
-      <div>
-        <router-link to="/create" class="btn btn-primary btn-sm me-2">
+  <div class="content-card">
+    <div class="card-header">
+      <h3>
+        <span>Students</span>
+        <span v-if="students.length" class="badge badge-primary">{{ students.length }}</span>
+      </h3>
+      <div class="header-actions">
+        <router-link to="/create" class="btn btn-primary btn-sm">
           + Add Student
         </router-link>
-
-        <!-- LOGOUT -->
-        <button class="btn btn-danger btn-sm" @click="logout">
-          Logout
-        </button>
       </div>
     </div>
 
-    <!-- TABLE -->
-    <table class="table table-bordered table-hover">
-      <thead class="table-dark">
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Gender</th>
-          <th>Address</th>
-          <th width="220">Action</th>
-        </tr>
-      </thead>
+    <div class="card-body">
+      <!-- Table -->
+      <div v-if="students.length" class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Gender</th>
+              <th>Address</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in students" :key="item.id">
+              <td data-label="ID">{{ item.id }}</td>
+              <td data-label="Name">{{ item.name }}</td>
+              <td data-label="Email">{{ item.email }}</td>
+              <td data-label="Phone">{{ item.phone }}</td>
+              <td data-label="Gender">
+                <span class="badge" :class="'badge-' + genderClass(item.gender)">{{ item.gender }}</span>
+              </td>
+              <td data-label="Address" class="truncate" :title="item.address">{{ item.address }}</td>
+              <td data-label="Actions">
+                <div class="actions">
+                  <button class="btn btn-info btn-sm" @click="viewStudent(item)" title="View details">
+                    View
+                  </button>
+                  <router-link :to="'/edit/' + item.id" class="btn btn-warning btn-sm" title="Edit student">
+                    Edit
+                  </router-link>
+                  <button class="btn btn-danger btn-sm" @click="confirmDelete(item)" title="Delete student">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <tbody>
-        <tr v-for="item in students" :key="item.id">
-          <td>{{ item.id }}</td>
-          <td>{{ item.name }}</td>
-          <td>{{ item.email }}</td>
-          <td>{{ item.phone }}</td>
-          <td>{{ item.gender }}</td>
-          <td>{{ item.address }}</td>
-
-          <td>
-            <!-- VIEW -->
-            <button
-              class="btn btn-info btn-sm me-1"
-              @click="viewStudent(item)"
-            >
-              View
-            </button>
-
-            <!-- EDIT -->
-            <router-link
-              :to="'/edit/' + item.id"
-              class="btn btn-warning btn-sm me-1"
-            >
-              Edit
-            </router-link>
-
-            <!-- DELETE -->
-            <button
-              class="btn btn-danger btn-sm"
-              @click="deleteStudent(item.id)"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- EMPTY -->
-    <div v-if="students.length === 0" class="alert alert-info">
-      No students found.
+      <!-- Empty state -->
+      <div v-else class="empty-state">
+        <span class="empty-icon">📚</span>
+        <h4>No students yet</h4>
+        <p>Get started by adding your first student to the system.</p>
+        <router-link to="/create" class="btn btn-primary btn-sm">+ Add Student</router-link>
+      </div>
     </div>
 
-    <!-- VIEW MODAL -->
+    <!-- View Modal -->
     <div v-if="selected" class="modal-overlay" @click.self="selected = null">
       <div class="modal-box">
-        <h4>Student Detail</h4>
-
+        <div class="modal-header">
+          <h4>Student Details</h4>
+          <button class="close-btn" @click="selected = null">&times;</button>
+        </div>
         <div class="modal-body">
           <div class="detail-row">
             <span class="label">ID:</span>
@@ -104,84 +97,100 @@
             <span class="value">{{ selected.address }}</span>
           </div>
         </div>
-
-        <button class="btn btn-secondary btn-sm" @click="selected = null">
-          Close
-        </button>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="selected = null">Close</button>
+        </div>
       </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="deleting" class="modal-overlay" @click.self="deleting = null">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h4>Confirm Delete</h4>
+          <button class="close-btn" @click="deleting = null">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-body">
+            <span class="confirm-icon">⚠️</span>
+            <h4>Delete Student?</h4>
+            <p>Are you sure you want to delete <strong>{{ deleting.name }}</strong>? This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="deleting = null">Cancel</button>
+          <button class="btn btn-danger btn-sm" @click="executeDelete">
+            <span v-if="deletingLoading" class="spinner-sm"></span>
+            <span v-else>Delete</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div v-if="loading" class="loading-container card-body">
+      <div class="spinner"></div>
+      <p>Loading students...</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import api from "../../services/api";
+import { useToast } from "../../composables/useToast";
 
-const router = useRouter();
+const { success, error } = useToast();
 
-// data
 const students = ref([]);
 const selected = ref(null);
+const deleting = ref(null);
+const deletingLoading = ref(false);
+const loading = ref(true);
 
-// LOAD DATA FROM BACKEND
 const loadStudents = async () => {
+  loading.value = true;
   try {
     const res = await api.get("/students");
     students.value = res.data.data || res.data;
   } catch (err) {
     console.log(err);
+    error("Failed to load students");
+  } finally {
+    loading.value = false;
   }
 };
 
-// VIEW
+const genderClass = (gender) => {
+  const map = { Male: "info", Female: "success", Other: "secondary" };
+  return map[gender] || "secondary";
+};
+
 const viewStudent = (item) => {
   selected.value = item;
 };
 
-// DELETE
-const deleteStudent = async (id) => {
-  if (confirm("Are you sure you want to delete this student?")) {
-    try {
-      await api.delete(`/students/${id}`);
-      loadStudents();
-    } catch (err) {
-      console.log(err);
-    }
+const confirmDelete = (item) => {
+  deleting.value = item;
+};
+
+const executeDelete = async () => {
+  if (!deleting.value) return;
+  deletingLoading.value = true;
+  try {
+    await api.delete(`/students/${deleting.value.id}`);
+    success(`Deleted ${deleting.value.name} successfully`);
+    deleting.value = null;
+    loadStudents();
+  } catch (err) {
+    console.log(err);
+    error("Failed to delete student");
+  } finally {
+    deletingLoading.value = false;
   }
 };
 
-// LOGOUT
-const logout = () => {
-  if (confirm("Are you sure you want to logout?")) {
-    localStorage.removeItem("token");
-    router.push("/login");
-  }
-};
-
-// INIT
 onMounted(() => {
   loadStudents();
 });
 </script>
-
-<style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-box {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 350px;
-}
-</style>

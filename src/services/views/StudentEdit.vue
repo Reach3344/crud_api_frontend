@@ -1,70 +1,105 @@
 <template>
-  <div class="card">
+  <div class="content-card">
     <div class="card-header">
       <h3>Edit Student</h3>
+      <div class="header-actions">
+        <router-link to="/students" class="btn btn-ghost btn-sm">
+          &larr; Back
+        </router-link>
+      </div>
     </div>
 
     <div class="card-body">
-      <form @submit.prevent="updateStudent">
-        <div class="mb-3">
-          <label>Name</label>
+      <!-- Loading skeleton -->
+      <div v-if="pageLoading">
+        <div class="skeleton skeleton-heading"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+        <div class="skeleton skeleton-heading mt-4"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 60%;"></div>
+        <div class="skeleton skeleton-btn mt-4"></div>
+      </div>
+
+      <form v-else @submit.prevent="updateStudent">
+        <div class="form-group">
+          <label>Full Name</label>
           <input
             type="text"
             class="form-control"
             v-model="student.name"
+            placeholder="Enter student name"
+            required
           />
         </div>
 
-        <div class="mb-3">
+        <div class="form-group">
           <label>Email</label>
           <input
             type="email"
             class="form-control"
             v-model="student.email"
+            placeholder="Enter email address"
+            required
           />
         </div>
 
-        <div class="mb-3">
+        <div class="form-group">
           <label>Phone</label>
           <input
             type="text"
             class="form-control"
             v-model="student.phone"
+            placeholder="Enter phone number"
+            required
           />
         </div>
 
-        <div class="mb-3">
+        <div class="form-group">
           <label>Gender</label>
-          <select class="form-control" v-model="student.gender">
-            <option value="">Select Gender</option>
+          <select class="form-control" v-model="student.gender" required>
+            <option value="" disabled>Select Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
           </select>
         </div>
 
-        <div class="mb-3">
+        <div class="form-group">
           <label>Address</label>
           <textarea
             class="form-control"
             v-model="student.address"
             rows="3"
+            placeholder="Enter full address"
+            required
           ></textarea>
         </div>
 
-        <button class="btn btn-primary">Update</button>
+        <div class="card-footer-plain">
+          <router-link to="/students" class="btn btn-secondary">Cancel</router-link>
+          <button type="submit" class="btn btn-primary" :disabled="saving">
+            <span v-if="saving" class="spinner-sm"></span>
+            <span v-else>Update Student</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../../services/api";
+import { useToast } from "../../composables/useToast";
 
 const route = useRoute();
 const router = useRouter();
+const { success, error } = useToast();
+
+const saving = ref(false);
+const pageLoading = ref(true);
 
 const student = reactive({
   name: "",
@@ -75,23 +110,29 @@ const student = reactive({
 });
 
 const loadStudent = async () => {
+  pageLoading.value = true;
   try {
     const response = await api.get(`/students/${route.params.id}`);
     Object.assign(student, response.data);
-  } catch (error) {
-    console.error(error);
-    alert(error?.response?.data?.message || "Failed to load student");
+  } catch (err) {
+    console.error(err);
+    error(err?.response?.data?.message || "Failed to load student");
+  } finally {
+    pageLoading.value = false;
   }
 };
 
 const updateStudent = async () => {
+  saving.value = true;
   try {
     await api.put(`/students/${route.params.id}`, student);
-    alert("Student updated successfully!");
+    success("Student updated successfully!");
     router.push("/students");
-  } catch (error) {
-    console.error(error);
-    alert(error?.response?.data?.message || "Failed to update student");
+  } catch (err) {
+    console.error(err);
+    error(err?.response?.data?.message || "Failed to update student");
+  } finally {
+    saving.value = false;
   }
 };
 
